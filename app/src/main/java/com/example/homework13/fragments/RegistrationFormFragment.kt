@@ -1,18 +1,17 @@
 package com.example.homework13.fragments
 
-import android.util.Log
-import android.widget.TextView
 import android.widget.Toast
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.homework13.recycler.Field
-import com.example.homework13.utility.ReadJsonFile
-import com.example.homework13.recycler.RegistrationFormRecyclerAdapter
 import com.example.homework13.databinding.FragmentRegistrationFormBinding
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import com.example.homework13.recycler.ChildAdapterDataCallback
+import com.example.homework13.recycler.Field
+import com.example.homework13.recycler.RegistrationFormRecyclerAdapter
+import com.example.homework13.viewmodel.ItemViewModel
 
-class RegistrationFormFragment : BaseFragment<FragmentRegistrationFormBinding>(FragmentRegistrationFormBinding::inflate) {
-    private val inputsAdapter = RegistrationFormRecyclerAdapter()
+class RegistrationFormFragment : BaseFragment<FragmentRegistrationFormBinding>(FragmentRegistrationFormBinding::inflate), ChildAdapterDataCallback {
+    private val inputsAdapter = RegistrationFormRecyclerAdapter(this)
+    private val viewModel: ItemViewModel by viewModels()
 
     override fun setUp() {
         initRecycler()
@@ -20,42 +19,41 @@ class RegistrationFormFragment : BaseFragment<FragmentRegistrationFormBinding>(F
     }
 
     private fun onRegisterButtonClick() {
+        val fields = viewModel.getFieldsFlattenList()
+        val requiredFields = fields.filter { it.required }
+
         binding.btnRegister.setOnClickListener {
-            if (validate(inputsAdapter.getMapOfElements())) {
-                showToast("Congrats")
+            val requiredFieldsMap = requiredFields.associate { it.fieldId to listOf(it.hint, it.userInput) }
+            if (validateMap(requiredFieldsMap)) {
+                showToast("Successful registration")
             }
         }
     }
 
-    private fun validate(mapOfElements: Map<Int, TextView>): Boolean {
-        var notValid = false
-        mapOfElements.values.forEach {
-            if (it.text?.isEmpty()!!) {
-                showToast("Field is not filled: ${it.hint}")
-                notValid = true
+    private fun validateMap(fieldsMap: Map<Int, List<String>>): Boolean {
+        fieldsMap.forEach {
+            if (it.value[1].isNullOrEmpty() || fieldsMap.isEmpty()) {
+                showToast("${it.value[0]} Is Required")
+                return false
             }
         }
 
-        return !notValid
+        return true
     }
 
     private fun initRecycler() {
         binding.rvInputs.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = inputsAdapter
-            inputsAdapter.setData(readJson())
+            inputsAdapter.setData(viewModel.inputData.value.orEmpty())
         }
-    }
-
-    private fun readJson(): List<List<Field>> {
-        val gson = Gson()
-        val jsonString = ReadJsonFile().readFile(requireContext(), "response.json")
-
-        val type = object : TypeToken<List<List<Field>>>() {}.type
-        return gson.fromJson(jsonString, type)
     }
 
     private fun showToast(message: String) {
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    }
+
+    override fun innerDataChangeListener(field: Field) {
+        viewModel.updateField(field)
     }
 }

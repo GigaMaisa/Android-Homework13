@@ -12,5 +12,21 @@ data class Field(
     val required: Boolean,
     @SerializedName("is_active")
     val isActive: Boolean,
-    val icon: String
+    val icon: String,
+    var userInput: String = "",
 )
+
+enum class FieldType(val type: String) {
+    INPUT(type = "input"),
+    CHOOSER(type = "chooser")
+}
+
+enum class ChooserType(val type: String) {
+    DATE(type = "Birthday"),
+    GENDER(type = "Gender")
+}
+
+enum class KeyboardType(val type: String) {
+    TEXT(type = "text"),
+    NUMBER(type = "number")
+}
