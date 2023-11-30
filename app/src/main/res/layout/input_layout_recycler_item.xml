@@ -1,0 +1,11 @@
+<EditText xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/etInputField"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:autofillHints="auto"
+    android:drawableEnd="@drawable/ic_person"
+    android:hint="@string/register"
+    android:inputType="text"
+    android:textColorHint="@color/black"
+    android:textSize="16sp" />
+
